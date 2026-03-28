@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Tasa de Deserción Intersemestral 2025-2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-primary: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-header: #1a237e;
+            --bg-header-light: #283593;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-on-dark: #ffffff;
+            --accent: #1565c0;
+            --positive: #2e7d32;
+            --negative: #c62828;
+            --neutral: #6c757d;
+            --gap: 16px;
+            --radius: 10px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        .dashboard-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: var(--gap);
+        }
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--bg-header), var(--bg-header-light));
+            color: var(--text-on-dark);
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            margin-bottom: var(--gap);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header-top h1 { font-size: 22px; font-weight: 700; }
+        .header-subtitle { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .filters-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: var(--gap);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 13px;
+            color: var(--text-primary);
+            min-width: 200px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .filter-group select:focus { outline: none; border-color: var(--accent); }
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1.5px solid #ddd;
+            background: #f8f9fa;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .chip:hover { border-color: var(--accent); }
+        .chip .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+        .kpi-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .kpi-value {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .kpi-sub {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .kpi-sub.positive { color: var(--positive); }
+        .kpi-sub.negative { color: var(--negative); }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+        .chart-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        .chart-container h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+        .chart-wrapper { position: relative; height: 400px; }
+        .chart-wrapper-sm { position: relative; height: 320px; }
+
+        .table-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            margin-bottom: var(--gap);
+        }
+        .table-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .data-table thead th {
+            text-align: left;
+            padding: 10px 10px;
+            border-bottom: 2px solid #dee2e6;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+        .data-table thead th:hover { color: var(--text-primary); background: #f8f9fa; }
+        .data-table tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        .data-table tbody tr:hover { background: #f0f4ff; }
+        .data-table tbody tr.highlight { background: #e3f2fd; }
+        .trend-cell { font-weight: 600; }
+        .trend-up { color: var(--negative); }
+        .trend-down { color: var(--positive); }
+        .trend-neutral { color: var(--neutral); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .badge-good { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #e65100; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-stable { background: #e3f2fd; color: #1565c0; }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .semester-toggle {
+            display: flex;
+            gap: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1.5px solid #ddd;
+        }
+        .sem-btn {
+            padding: 7px 16px;
+            border: none;
+            background: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.2s;
+            border-right: 1px solid #ddd;
+        }
+        .sem-btn:last-child { border-right: none; }
+        .sem-btn:hover { background: #e8eaf6; }
+        .sem-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .legend-hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        @media (max-width: 900px) {
+            .chart-row-2 { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .filter-group select { min-width: 150px; }
+        }
+        @media print {
+            body { background: white; }
+            .filters-section { display: none; }
+            .chart-container, .kpi-card { box-shadow: none; border: 1px solid #dee2e6; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+
+    <div class="dashboard-header">
+        <div class="header-top">
+            <div>
+                <h1>Tasa de Deserción Intersemestral (TAI)</h1>
+                <div class="header-subtitle">Análisis histórico 2016-I a 2025-II · Fundación Universitaria Tecnológico Comfenalco-Cartagena</div>
+            </div>
+            <div style="font-size:13px; opacity:0.8;">Actualizado: 2025-II</div>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-section">
+        <div class="filter-group">
+            <label>Facultad</label>
+            <select id="filter-facultad" onchange="dashboard.applyFilters()">
+                <option value="all">Todas las facultades</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Grado</label>
+            <select id="filter-grado" onchange="dashboard.applyFilters()">
+                <option value="all">Todos los grados</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Programa</label>
+            <select id="filter-programa" onchange="dashboard.applyFilters()">
+                <option value="all">Todos los programas</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Semestre</label>
+            <div class="semester-toggle" id="semester-toggle">
+                <button class="sem-btn active" data-value="all" onclick="dashboard.setSemester('all')">Todos</button>
+                <button class="sem-btn" data-value="I" onclick="dashboard.setSemester('I')">I</button>
+                <button class="sem-btn" data-value="II" onclick="dashboard.setSemester('II')">II</button>
+            </div>
+        </div>
+        <div class="filter-group" style="margin-left:auto;">
+            <label>&nbsp;</label>
+            <button onclick="dashboard.resetFilters()" style="padding:8px 16px; border:1.5px solid #ddd; border-radius:6px; background:#f8f9fa; cursor:pointer; font-size:13px; transition:all 0.2s;">
+                Limpiar filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- PROGRAM CHIPS -->
+    <div class="filters-section" id="program-chips-container" style="display:none;">
+        <div style="width:100%;">
+            <label style="font-size:11px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:0.5px;">Programas visibles en gráfico (clic para mostrar/ocultar)</label>
+            <div class="chip-container" id="program-chips"></div>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-label">TAI Institucional 2025-II</div>
+            <div class="kpi-value" id="kpi-tai-actual"></div>
+            <div class="kpi-sub" id="kpi-tai-change"></div>
+        </div>
+        <div class="kpi-card" style="border-left-color:#2e7d32;">
+            <div class="kpi-label">Mejor programa</div>
+            <div class="kpi-value" id="kpi-best" style="font-size:18px;"></div>
+            <div class="kpi-sub" id="kpi-best-val"></div>
+        </div>
+        <div class="kpi-card" style="border-left-color:#c62828;">
+            <div class="kpi-label">Programa con mayor TAI</div>
+            <div class="kpi-value" id="kpi-worst" style="font-size:18px;"></div>
+            <div class="kpi-sub" id="kpi-worst-val"></div>
+        </div>
+        <div class="kpi-card" style="border-left-color:#f57c00;">
+            <div class="kpi-label">Programas filtrados</div>
+            <div class="kpi-value" id="kpi-count"></div>
+            <div class="kpi-sub" id="kpi-avg"></div>
+        </div>
+    </section>
+
+    <!-- MAIN LINE CHART -->
+    <section class="chart-row">
+        <div class="chart-container">
+            <h3>Evolución histórica de la Tasa de Deserción Intersemestral por programa</h3>
+            <p class="legend-hint">Haz clic en los nombres de la leyenda o en los chips de arriba para mostrar/ocultar programas</p>
+            <div class="chart-wrapper">
+                <canvas id="main-line-chart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- TWO CHARTS ROW -->
+    <section class="chart-row-2">
+        <div class="chart-container">
+            <h3 id="title-bar-current">TAI 2025-II por programa</h3>
+            <div class="chart-wrapper-sm">
+                <canvas id="bar-chart-current"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 id="title-bar-change">Variación TAI (2025-I vs 2025-II)</h3>
+            <div class="chart-wrapper-sm">
+                <canvas id="bar-chart-change"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECOND ROW -->
+    <section class="chart-row-2">
+        <div class="chart-container">
+            <h3 id="title-faculty">TAI promedio por Facultad (2025-II)</h3>
+            <div class="chart-wrapper-sm">
+                <canvas id="faculty-chart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 id="title-grado">TAI promedio por Grado (2025-II)</h3>
+            <div class="chart-wrapper-sm">
+                <canvas id="grado-chart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="table-section">
+        <h3>Detalle por programa</h3>
+        <div style="max-height:500px; overflow-y:auto;">
+            <table class="data-table" id="detail-table">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="footer">
+        Fundación Universitaria Tecnológico Comfenalco-Cartagena · Dashboard generado a partir de "Tasas de Ausencia Intersemestral 2025-2" · Los valores de TAI son tasas internas (omitiendo egresados no graduados)
+    </div>
+</div>
+
+<script>
+// ============= DATA =============
+const PERIODS = ['2016-I','2016-II','2017-I','2017-II','2018-I','2018-II','2019-I','2019-II','2020-I','2020-II','2021-I','2021-II','2022-I','2022-II','2023-I','2023-II','2024-I','2024-II','2025-I','2025-II'];
+
+const RAW_DATA = [
+  {programa:"ADMINISTRACIÓN DE EMPRESAS",grado:"Profesional",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.221,0.139,0.117,0.097,0.117,0.302,0.315,0.1,0.098,0.118,0.147,0.072,0.077,0.07,0.055,0.063,0.061,0.046,0.042,0.0433]},
+  {programa:"ADMIN. SEGURIDAD Y SALUD EN EL TRABAJO",grado:"Profesional",facultad:"Ciencias económicas, administrativas y contables",tasas:[null,null,null,null,null,null,null,null,null,null,null,0.222,0.13,0.094,0.026,0.088,0.048,0.093,0.026,0.0541]},
+  {programa:"CONTADURÍA PÚBLICA",grado:"Profesional",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.217,0.177,0.266,0.154,0.137,0.17,0.19,0.154,0.113,0.144,0.199,0.076,0.098,0.15,0.089,0.125,0.052,0.07,0.064,0.072]},
+  {programa:"DERECHO",grado:"Profesional",facultad:"Ciencias sociales y humanas",tasas:[0.147,0.179,0.159,0.231,0.111,0.158,0.129,0.104,0.078,0.081,0.098,0.074,0.078,0.072,0.058,0.117,0.1,0.08,0.079,0.0955]},
+  {programa:"INGENIERÍA AMBIENTAL",grado:"Profesional",facultad:"Ingeniería",tasas:[0.118,0.088,0.07,0.016,0.119,0.1,0.083,0.265,0.115,0.113,0.131,0.084,0.132,0.048,0.167,0.133,0.089,0.15,0.144,0.1505]},
+  {programa:"INGENIERÍA CIVIL",grado:"Profesional",facultad:"Ingeniería",tasas:[null,null,null,null,null,null,null,null,null,null,0.174,0.227,0.08,0.108,0.114,0.105,0.101,0.097,0.083,0.0795]},
+  {programa:"INGENIERÍA DE PROCESOS",grado:"Profesional",facultad:"Ingeniería",tasas:[0.295,0.331,0.245,0.251,0.219,0.207,0.142,0.283,0.292,0.253,0.356,0.079,0.135,0.188,0.107,0.126,0.131,0.128,0.067,0.125]},
+  {programa:"INGENIERÍA DE SISTEMAS",grado:"Profesional",facultad:"Ingeniería",tasas:[0.366,0.296,0.169,0.209,0.183,0.097,0.177,0.169,0.052,0.052,0.298,0.098,0.063,0.099,0.006,0.065,0.132,0.133,0.078,0.0571]},
+  {programa:"INGENIERÍA ELECTRÓNICA",grado:"Profesional",facultad:"Ingeniería",tasas:[0,0.058,0.014,0.253,0.066,0.16,0.026,0.224,0.169,0.206,0.316,0.065,0.058,0.125,0.063,0.072,0.061,0.045,0.066,0.0364]},
+  {programa:"INGENIERÍA INDUSTRIAL",grado:"Profesional",facultad:"Ingeniería",tasas:[0.213,0.179,0.141,0.147,0.152,0.172,0.146,0.27,0.14,0.161,0.286,0.072,0.084,0.076,0.097,0.096,0.104,0.078,0.08,0.0713]},
+  {programa:"LIC. EDUCACIÓN INFANTIL",grado:"Profesional",facultad:"Ciencias sociales y humanas",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.1739]},
+  {programa:"NEGOCIOS INTERNACIONALES PROF.",grado:"Profesional",facultad:"Ciencias económicas, administrativas y contables",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0]},
+  {programa:"PSICOLOGÍA",grado:"Profesional",facultad:"Ciencias sociales y humanas",tasas:[0.15,0.118,0.115,0.159,0.109,0.092,0.11,0.094,0.13,0.172,0.075,0.06,0.051,0.153,0.042,0.049,0.045,0.033,0.035,0.0505]},
+  {programa:"TEC. CONSTRUCCIONES CIVILES",grado:"Tecnológico",facultad:"Ingeniería",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.1429]},
+  {programa:"TEC. CONTABILIDAD SISTEMATIZADA",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.17,0.186,0.232,0.215,0.216,0.137,0.147,0.136,0.123,0.222,0.138,0.142,0.136,0.13,0.138,0.138,0.136,0.09,0.039,0.1429]},
+  {programa:"TEC. CONTROL DE CALIDAD",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.153,0.174,0.164,0.184,0.125,0.171,0.157,0.204,0.217,0.246,0.106,0.11,0.073,0.128,0.099,0.104,0.119,0.105,0.111,0.0857]},
+  {programa:"TEC. CONTROL ELECTRÓNICO DE PROCESOS",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.31,0.175,0.197,0.165,0.149,0.171,0.284,0.179,0.213,0.312,0.118,0.131,0.101,0.089,0.098,0.115,0.146,0.147,0.099,0.1277]},
+  {programa:"TEC. DESARROLLO DE SOFTWARE",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.209,0.275,0.216,0.213,0.195,0.293,0.142,0.22,0.196,0.275,0.113,0.158,0.092,0.102,0.106,0.106,0.09,0.098,0.088,0.1037]},
+  {programa:"TEC. GESTIÓN AMBIENTAL INDUSTRIAL",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.219,0.222,0.19,0.211,0.17,0.22,0.052,0.191,0.171,0.204,0.09,0.128,0.067,0.066,0.092,0.097,0.101,0.087,0.088,0.0575]},
+  {programa:"TEC. GESTIÓN CONTABLE",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.224,0.151,0.127,0.107,0.0991]},
+  {programa:"TEC. GESTIÓN DE MARKETING",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,0.17,0.115,0.101,0.147,0.111,0.112,0.076,0.1075]},
+  {programa:"TEC. GESTIÓN NEGOCIOS INTERNACIONALES",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.201,0.237,0.235,0.228,0.207,0.243,0.235,0.188,0.186,0.275,0.151,0.119,0.124,0.115,0.093,0.106,0.106,0.082,0.084,0.0818]},
+  {programa:"TEC. REDES Y SEGURIDAD INFORMÁTICA",grado:"Tecnológico",facultad:"Ingeniería",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.12,0.116,0.097,0.176,0.0891]},
+  {programa:"TEC. GESTIÓN FINANCIERA",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.232,0.283,0.283,0.269,0.142,0.231,0.21,0.193,0.084,0.187,0.126,0.131,0.077,0.126,0.09,0.098,0.125,0.077,0.132,0.1102]},
+  {programa:"TEC. GESTIÓN LOGÍSTICA Y PORTUARIA",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.155,0.231,0.195,0.247,0.147,0.217,0.238,0.211,0.148,0.188,0.144,0.124,0.077,0.101,0.094,0.091,0.102,0.106,0.104,0.1263]},
+  {programa:"TEC. GESTIÓN TURÍSTICA Y HOTELERA",grado:"Tecnológico",facultad:"Ciencias económicas, administrativas y contables",tasas:[0.186,0.182,0.217,0.255,0.198,0.293,0.149,0.2,0.091,0.156,0.182,0.078,0.077,0.119,0.077,0.091,0.123,0.094,0.138,0.0983]},
+  {programa:"TEC. INSTRUMENTACIÓN INDUSTRIAL",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.561,0.244,0.163,0.24,0.174,0.22,0.164,0.22,0.063,0.541,0.12,0.157,0.146,0.25,0.09,0.222,0.116,0.065,0.074,0]},
+  {programa:"TEC. OPERACIÓN PLANTAS Y PROCESOS IND.",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.27,0.268,0.203,0.301,0.201,0.233,0.134,0.223,0.249,0.308,0.123,0.146,0.119,0.132,0.102,0.139,0.137,0.12,0.156,0.18]},
+  {programa:"TEC. PRODUCCIÓN INDUSTRIAL",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.199,0.216,0.216,0.189,0.187,0.198,0.128,0.18,0.189,0.247,0.105,0.14,0.097,0.097,0.1,0.1,0.105,0.097,0.088,0.0907]},
+  {programa:"TEC. PROMOCIÓN SOCIAL",grado:"Tecnológico",facultad:"Ciencias sociales y humanas",tasas:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.0323]},
+  {programa:"TEC. SEGURIDAD E HIGIENE OCUPACIONAL",grado:"Tecnológico",facultad:"Ingeniería",tasas:[0.247,0.256,0.175,0.22,0.107,0.258,0.167,0.175,0.197,0.339,0.138,0.125,0.133,0.108,0.102,0.09,0.136,0.076,0.09,0.106]},
+  {programa:"TRABAJO SOCIAL",grado:"Profesional",facultad:"Ciencias sociales y humanas",tasas:[null,null,null,null,null,null,null,0.143,0.16,0.206,0.059,0.121,0.051,0.06,0.058,0.047,0.045,0.036,0.048,0.0353]},
+  {programa:"INSTITUCIONAL",grado:"INSTITUCIONAL",facultad:"INSTITUCIONAL",tasas:[0.229,0.205,0.183,0.211,0.153,0.193,0.149,0.179,0.143,0.203,0.159,0.117,0.09,0.106,0.087,0.1,0.099,0.087,0.085,0.0894]}
+];
+
+const COLORS_PALETTE = [
+    '#1565c0','#e53935','#43a047','#fb8c00','#8e24aa',
+    '#00897b','#d81b60','#5e35b1','#00acc1','#c0ca33',
+    '#6d4c41','#546e7a','#f4511e','#1e88e5','#7cb342',
+    '#fdd835','#3949ab','#039be5','#00b8d4','#ff6f00',
+    '#4e342e','#78909c','#ff7043','#26a69a','#ab47bc',
+    '#ec407a','#7e57c2','#29b6f6','#9ccc65','#ffca28',
+    '#8d6e63','#bdbdbd'
+];
+
+// ============= DASHBOARD =============
+class Dashboard {
+    constructor(data) {
+        this.rawData = data;
+        this.institutional = data.find(d => d.programa === 'INSTITUCIONAL');
+        // Include all programs (INSTITUCIONAL included)
+        this.filteredData = [...data];
+        this.visiblePrograms = new Set(this.filteredData.map(d => d.programa));
+        this.semesterFilter = 'all'; // 'all', 'I', 'II'
+        this.charts = {};
+        this.init();
+    }
+
+    // Returns indices and labels of periods matching the semester filter
+    getFilteredPeriodIndices() {
+        if (this.semesterFilter === 'all') return PERIODS.map((_, i) => i);
+        return PERIODS.map((p, i) => ({ p, i }))
+            .filter(({ p }) => {
+                if (this.semesterFilter === 'I') return p.endsWith('-I') && !p.endsWith('-II');
+                return p.endsWith('-II');
+            })
+            .map(({ i }) => i);
+    }
+
+    getFilteredPeriods() {
+        const indices = this.getFilteredPeriodIndices();
+        return indices.map(i => PERIODS[i]);
+    }
+
+    // Get the last period index for KPIs and bar charts based on semester filter
+    getLastPeriodIndex() {
+        const indices = this.getFilteredPeriodIndices();
+        return indices[indices.length - 1];
+    }
+
+    getPrevPeriodIndex() {
+        const indices = this.getFilteredPeriodIndices();
+        return indices.length >= 2 ? indices[indices.length - 2] : null;
+    }
+
+    init() {
+        this.populateFilters();
+        this.renderKPIs();
+        this.renderMainLineChart();
+        this.renderBarChartCurrent();
+        this.renderBarChartChange();
+        this.renderFacultyChart();
+        this.renderGradoChart();
+        this.renderTable();
+        this.renderChips();
+    }
+
+    populateFilters() {
+        const facultades = [...new Set(this.rawData.map(d=>d.facultad))].sort();
+        const grados = [...new Set(this.rawData.map(d=>d.grado))].sort();
+        const programas = [...new Set(this.rawData.map(d=>d.programa))].sort();
+
+        const fSel = document.getElementById('filter-facultad');
+        facultades.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; fSel.appendChild(o); });
+
+        const gSel = document.getElementById('filter-grado');
+        grados.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = g; gSel.appendChild(o); });
+
+        const pSel = document.getElementById('filter-programa');
+        programas.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; pSel.appendChild(o); });
+    }
+
+    applyFilters() {
+        const facultad = document.getElementById('filter-facultad').value;
+        const grado = document.getElementById('filter-grado').value;
+        const programa = document.getElementById('filter-programa').value;
+
+        this.filteredData = this.rawData.filter(d => {
+            if (facultad !== 'all' && d.facultad !== facultad) return false;
+            if (grado !== 'all' && d.grado !== grado) return false;
+            if (programa !== 'all' && d.programa !== programa) return false;
+            return true;
+        });
+
+        this.visiblePrograms = new Set(this.filteredData.map(d => d.programa));
+        this.renderKPIs();
+        this.updateAllCharts();
+        this.renderTable();
+        this.renderChips();
+    }
+
+    setSemester(value) {
+        this.semesterFilter = value;
+        document.querySelectorAll('.sem-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === value);
+        });
+        this.renderKPIs();
+        this.updateAllCharts();
+        this.renderTable();
+    }
+
+    resetFilters() {
+        document.getElementById('filter-facultad').value = 'all';
+        document.getElementById('filter-grado').value = 'all';
+        document.getElementById('filter-programa').value = 'all';
+        this.semesterFilter = 'all';
+        document.querySelectorAll('.sem-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === 'all');
+        });
+        this.applyFilters();
+    }
+
+    renderChips() {
+        const container = document.getElementById('program-chips');
+        const chipsSection = document.getElementById('program-chips-container');
+        container.innerHTML = '';
+
+        if (this.filteredData.length <= 1) {
+            chipsSection.style.display = 'none';
+            return;
+        }
+        chipsSection.style.display = '';
+
+        this.filteredData.forEach((d, i) => {
+            const chip = document.createElement('span');
+            chip.className = 'chip' + (this.visiblePrograms.has(d.programa) ? ' active' : '');
+            const color = this.getColorForProgram(d.programa);
+            chip.innerHTML = `<span class="dot" style="background:${color}"></span>${d.programa}`;
+            chip.onclick = () => {
+                if (this.visiblePrograms.has(d.programa)) {
+                    if (this.visiblePrograms.size > 1) this.visiblePrograms.delete(d.programa);
+                } else {
+                    this.visiblePrograms.add(d.programa);
+                }
+                this.updateMainLineChart();
+                this.renderChips();
+            };
+            container.appendChild(chip);
+        });
+    }
+
+    renderKPIs() {
+        const lastIdx = this.getLastPeriodIndex();
+        const prevIdx = this.getPrevPeriodIndex();
+        const lastPeriod = PERIODS[lastIdx];
+        const prevPeriod = prevIdx !== null ? PERIODS[prevIdx] : null;
+
+        const inst = this.institutional;
+        const taiActual = inst.tasas[lastIdx];
+        const taiPrev = prevIdx !== null ? inst.tasas[prevIdx] : null;
+
+        document.getElementById('kpi-tai-actual').textContent = taiActual !== null ? (taiActual * 100).toFixed(2) + '%' : 'N/A';
+        const changeEl = document.getElementById('kpi-tai-change');
+        if (taiActual !== null && taiPrev !== null) {
+            const change = taiActual - taiPrev;
+            const sign = change >= 0 ? '+' : '';
+            changeEl.textContent = `${sign}${(change * 100).toFixed(2)} pp vs ${prevPeriod}`;
+            changeEl.className = 'kpi-sub ' + (change <= 0 ? 'positive' : 'negative');
+        } else {
+            changeEl.textContent = lastPeriod;
+            changeEl.className = 'kpi-sub';
+        }
+
+        // Update KPI card header dynamically
+        document.querySelector('#kpi-tai-actual').closest('.kpi-card').querySelector('.kpi-label').textContent = `TAI Institucional ${lastPeriod}`;
+
+        // Best and worst from filtered (excluding INSTITUCIONAL from ranking)
+        const withCurrent = this.filteredData.filter(d => d.tasas[lastIdx] !== null && d.tasas[lastIdx] !== undefined && d.programa !== 'INSTITUCIONAL');
+        if (withCurrent.length > 0) {
+            const sorted = [...withCurrent].sort((a, b) => a.tasas[lastIdx] - b.tasas[lastIdx]);
+            const best = sorted[0];
+            const worst = sorted[sorted.length - 1];
+            document.getElementById('kpi-best').textContent = best.programa;
+            document.getElementById('kpi-best-val').textContent = (best.tasas[lastIdx] * 100).toFixed(2) + '%';
+            document.getElementById('kpi-best-val').className = 'kpi-sub positive';
+            document.getElementById('kpi-worst').textContent = worst.programa;
+            document.getElementById('kpi-worst-val').textContent = (worst.tasas[lastIdx] * 100).toFixed(2) + '%';
+            document.getElementById('kpi-worst-val').className = 'kpi-sub negative';
+        }
+
+        document.getElementById('kpi-count').textContent = this.filteredData.length;
+        const avg = withCurrent.length > 0 ? withCurrent.reduce((s, d) => s + (d.tasas[lastIdx] || 0), 0) / withCurrent.length : 0;
+        document.getElementById('kpi-avg').textContent = 'Promedio TAI: ' + (avg * 100).toFixed(2) + '%';
+        document.getElementById('kpi-avg').className = 'kpi-sub';
+    }
+
+    getColorForProgram(programa) {
+        if (programa === 'INSTITUCIONAL') return '#333333';
+        const idx = this.rawData.filter(r=>r.programa!=='INSTITUCIONAL').findIndex(r=>r.programa===programa);
+        return COLORS_PALETTE[idx % COLORS_PALETTE.length];
+    }
+
+    renderMainLineChart() {
+        const ctx = document.getElementById('main-line-chart').getContext('2d');
+        const periodIndices = this.getFilteredPeriodIndices();
+        const periodLabels = this.getFilteredPeriods();
+        const datasets = this.filteredData.map(d => {
+            const isInst = d.programa === 'INSTITUCIONAL';
+            return {
+                label: d.programa,
+                data: periodIndices.map(i => d.tasas[i] !== null ? +(d.tasas[i] * 100).toFixed(2) : null),
+                borderColor: this.getColorForProgram(d.programa),
+                backgroundColor: isInst ? 'transparent' : this.getColorForProgram(d.programa) + '20',
+                borderWidth: isInst ? 3 : 2,
+                borderDash: isInst ? [8, 4] : [],
+                fill: false,
+                tension: 0.3,
+                pointRadius: isInst ? 4 : 3,
+                pointHoverRadius: isInst ? 7 : 6,
+                spanGaps: true,
+                hidden: !this.visiblePrograms.has(d.programa)
+            };
+        });
+
+        this.charts.mainLine = new Chart(ctx, {
+            type: 'line',
+            data: { labels: periodLabels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true, padding: 12, font: { size: 11 },
+                            filter: (legendItem, chartData) => !chartData.datasets[legendItem.datasetIndex].hidden
+                        },
+                        onClick: (e, legendItem, legend) => {
+                            const idx = legendItem.datasetIndex;
+                            const ds = legend.chart.data.datasets[idx];
+                            ds.hidden = !ds.hidden;
+                            if (ds.hidden) this.visiblePrograms.delete(ds.label);
+                            else this.visiblePrograms.add(ds.label);
+                            this.renderChips();
+                            legend.chart.update();
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) + '%' : 'N/A'}`
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => v.toFixed(0) + '%',
+                            font: { size: 11 }
+                        },
+                        title: { display: true, text: 'Tasa (%)', font: { size: 12 } }
+                    }
+                }
+            }
+        });
+    }
+
+    updateMainLineChart() {
+        if (!this.charts.mainLine) return;
+        const chart = this.charts.mainLine;
+        const periodIndices = this.getFilteredPeriodIndices();
+        const periodLabels = this.getFilteredPeriods();
+        const datasets = this.filteredData.map(d => {
+            const isInst = d.programa === 'INSTITUCIONAL';
+            return {
+                label: d.programa,
+                data: periodIndices.map(i => d.tasas[i] !== null ? +(d.tasas[i] * 100).toFixed(2) : null),
+                borderColor: this.getColorForProgram(d.programa),
+                backgroundColor: isInst ? 'transparent' : this.getColorForProgram(d.programa) + '20',
+                borderWidth: isInst ? 3 : 2,
+                borderDash: isInst ? [8, 4] : [],
+                fill: false,
+                tension: 0.3,
+                pointRadius: isInst ? 4 : 3,
+                pointHoverRadius: isInst ? 7 : 6,
+                spanGaps: true,
+                hidden: !this.visiblePrograms.has(d.programa)
+            };
+        });
+        chart.data.labels = periodLabels;
+        chart.data.datasets = datasets;
+        chart.update('none');
+    }
+
+    renderBarChartCurrent() {
+        const lastIdx = this.getLastPeriodIndex();
+        const lastPeriod = PERIODS[lastIdx];
+        document.getElementById('title-bar-current').textContent = `TAI ${lastPeriod} por programa`;
+        const data = this.filteredData.filter(d => d.tasas[lastIdx] !== null).sort((a, b) => b.tasas[lastIdx] - a.tasas[lastIdx]);
+        const ctx = document.getElementById('bar-chart-current').getContext('2d');
+        this.charts.barCurrent = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.programa),
+                datasets: [{
+                    label: 'TAI ' + lastPeriod,
+                    data: data.map(d => +(d.tasas[lastIdx] * 100).toFixed(2)),
+                    backgroundColor: data.map(d => this.getColorForProgram(d.programa) + 'CC'),
+                    borderColor: data.map(d => this.getColorForProgram(d.programa)),
+                    borderWidth: 1,
+                    borderRadius: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ctx.parsed.x.toFixed(2) + '%' } }
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { callback: v => v + '%' } },
+                    y: { ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    renderBarChartChange() {
+        const lastIdx = this.getLastPeriodIndex();
+        const prevIdx = this.getPrevPeriodIndex();
+        const lastPeriod = PERIODS[lastIdx];
+        const prevPeriod = prevIdx !== null ? PERIODS[prevIdx] : null;
+        document.getElementById('title-bar-change').textContent = prevPeriod ? `Variación TAI (${prevPeriod} vs ${lastPeriod})` : 'Variación TAI';
+        if (prevIdx === null) {
+            const ctx = document.getElementById('bar-chart-change').getContext('2d');
+            this.charts.barChange = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] }, options: { responsive: true, maintainAspectRatio: false } });
+            return;
+        }
+        const data = this.filteredData
+            .filter(d => d.tasas[lastIdx] !== null && d.tasas[prevIdx] !== null)
+            .map(d => ({ ...d, change: +((d.tasas[lastIdx] - d.tasas[prevIdx]) * 100).toFixed(2) }))
+            .sort((a, b) => a.change - b.change);
+
+        const ctx = document.getElementById('bar-chart-change').getContext('2d');
+        this.charts.barChange = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.programa),
+                datasets: [{
+                    label: 'Variación (pp)',
+                    data: data.map(d => d.change),
+                    backgroundColor: data.map(d => d.change <= 0 ? '#43a04799' : '#e5393599'),
+                    borderColor: data.map(d => d.change <= 0 ? '#43a047' : '#e53935'),
+                    borderWidth: 1,
+                    borderRadius: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => (ctx.parsed.x >= 0 ? '+' : '') + ctx.parsed.x.toFixed(2) + ' pp' } }
+                },
+                scales: {
+                    x: { ticks: { callback: v => (v >= 0 ? '+' : '') + v + ' pp' } },
+                    y: { ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    renderFacultyChart() {
+        const lastIdx = this.getLastPeriodIndex();
+        const lastPeriod = PERIODS[lastIdx];
+        document.getElementById('title-faculty').textContent = `TAI promedio por Facultad (${lastPeriod})`;
+        const groups = {};
+        this.filteredData.filter(d => d.tasas[lastIdx] !== null && d.facultad !== 'INSTITUCIONAL').forEach(d => {
+            if (!groups[d.facultad]) groups[d.facultad] = [];
+            groups[d.facultad].push(d.tasas[lastIdx]);
+        });
+        const labels = Object.keys(groups).sort();
+        const data = labels.map(f => +(groups[f].reduce((s, v) => s + v, 0) / groups[f].length * 100).toFixed(2));
+        const colors = ['#1565c0','#e53935','#43a047','#fb8c00'];
+
+        const ctx = document.getElementById('faculty-chart').getContext('2d');
+        this.charts.faculty = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{ label: 'Promedio TAI', data, backgroundColor: colors.map(c=>c+'CC'), borderColor: colors, borderWidth: 1, borderRadius: 4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' } }
+                },
+                scales: {
+                    x: { ticks: { font: { size: 10 }, maxRotation: 20 } },
+                    y: { beginAtZero: true, ticks: { callback: v => v + '%' } }
+                }
+            }
+        });
+    }
+
+    renderGradoChart() {
+        const lastIdx = this.getLastPeriodIndex();
+        const lastPeriod = PERIODS[lastIdx];
+        document.getElementById('title-grado').textContent = `TAI promedio por Grado (${lastPeriod})`;
+        const groups = {};
+        this.filteredData.filter(d => d.tasas[lastIdx] !== null && d.grado !== 'INSTITUCIONAL').forEach(d => {
+            if (!groups[d.grado]) groups[d.grado] = [];
+            groups[d.grado].push(d.tasas[lastIdx]);
+        });
+        const labels = Object.keys(groups).sort();
+        const data = labels.map(g => +(groups[g].reduce((s, v) => s + v, 0) / groups[g].length * 100).toFixed(2));
+
+        const ctx = document.getElementById('grado-chart').getContext('2d');
+        this.charts.grado = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: ['#1565c0CC','#fb8c00CC','#43a047CC'],
+                    borderColor: '#fff',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: 12 } } },
+                    tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(2)}%` } }
+                }
+            }
+        });
+    }
+
+    updateAllCharts() {
+        // Destroy and rebuild all charts
+        Object.values(this.charts).forEach(c => c.destroy());
+        this.charts = {};
+        this.renderMainLineChart();
+        this.renderBarChartCurrent();
+        this.renderBarChartChange();
+        this.renderFacultyChart();
+        this.renderGradoChart();
+    }
+
+    renderTable() {
+        const table = document.getElementById('detail-table');
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+
+        const periodIndices = this.getFilteredPeriodIndices();
+        const lastIdx = this.getLastPeriodIndex();
+        const prevIdx = this.getPrevPeriodIndex();
+        const lastPeriod = PERIODS[lastIdx];
+        const prevPeriod = prevIdx !== null ? PERIODS[prevIdx] : null;
+        // Third-to-last for reference
+        const thirdIdx = periodIndices.length >= 3 ? periodIndices[periodIndices.length - 3] : null;
+        const thirdPeriod = thirdIdx !== null ? PERIODS[thirdIdx] : null;
+
+        thead.innerHTML = `<tr>
+            <th onclick="dashboard.sortTable('programa')">Programa</th>
+            <th onclick="dashboard.sortTable('grado')">Grado</th>
+            <th onclick="dashboard.sortTable('facultad')">Facultad</th>
+            <th onclick="dashboard.sortTable('taiLast')">TAI ${lastPeriod}</th>
+            ${prevPeriod ? `<th onclick="dashboard.sortTable('taiPrev')">TAI ${prevPeriod}</th>` : ''}
+            ${prevPeriod ? `<th onclick="dashboard.sortTable('variacion')">Variación</th>` : ''}
+            ${thirdPeriod ? `<th onclick="dashboard.sortTable('taiThird')">TAI ${thirdPeriod}</th>` : ''}
+            <th>Tendencia 3 períodos</th>
+            <th onclick="dashboard.sortTable('tendencia')">Tendencia</th>
+        </tr>`;
+
+        const last3Indices = periodIndices.slice(-3);
+        let data = this.filteredData.map(d => {
+            const taiLast = d.tasas[lastIdx];
+            const taiPrev = prevIdx !== null ? d.tasas[prevIdx] : null;
+            const taiThird = thirdIdx !== null ? d.tasas[thirdIdx] : null;
+            const variacion = (taiLast !== null && taiPrev !== null) ? taiLast - taiPrev : null;
+            // Compute trend value for sorting: negative = decreciente, 0 = estable, positive = creciente
+            const trendVals = last3Indices.map(i => d.tasas[i]).filter(v => v !== null);
+            let tendencia = 0;
+            if (trendVals.length >= 2) tendencia = trendVals[trendVals.length - 1] - trendVals[0];
+            return { ...d, taiLast, taiPrev, taiThird, variacion, tendencia };
+        });
+
+        if (this._sortCol) {
+            data.sort((a, b) => {
+                let av = a[this._sortCol], bv = b[this._sortCol];
+                if (av === null || av === undefined) av = this._sortDir === 'asc' ? Infinity : -Infinity;
+                if (bv === null || bv === undefined) bv = this._sortDir === 'asc' ? Infinity : -Infinity;
+                if (typeof av === 'string') return this._sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+                return this._sortDir === 'asc' ? av - bv : bv - av;
+            });
+        }
+
+        tbody.innerHTML = data.map(d => {
+            const tai = d.taiLast !== null ? (d.taiLast * 100).toFixed(2) + '%' : 'N/A';
+            const taiPrevText = d.taiPrev !== null ? (d.taiPrev * 100).toFixed(2) + '%' : 'N/A';
+            const taiThirdText = d.taiThird !== null ? (d.taiThird * 100).toFixed(2) + '%' : 'N/A';
+
+            let varText = 'N/A', varClass = 'trend-neutral';
+            if (d.variacion !== null) {
+                const sign = d.variacion >= 0 ? '+' : '';
+                varText = sign + (d.variacion * 100).toFixed(2) + ' pp';
+                varClass = d.variacion > 0.005 ? 'trend-up' : d.variacion < -0.005 ? 'trend-down' : 'trend-neutral';
+            }
+
+            // Sparkline text: last 3 filtered periods
+            const spark = last3Indices.map(i => d.tasas[i]).filter(v => v !== null).map(v => (v * 100).toFixed(1)).join(' → ');
+
+            // Trend badge based on last 3 filtered periods
+            let badge = '';
+            const trendValsRow = last3Indices.map(i => d.tasas[i]).filter(v => v !== null);
+            if (trendValsRow.length >= 2) {
+                const diff = d.tendencia;
+                // Check intermediate trend too for stability
+                const threshold = 0.01; // 1 pp
+                if (diff < -threshold) {
+                    badge = '<span class="badge badge-good">&#9660; Decreciente</span>';
+                } else if (diff > threshold) {
+                    badge = '<span class="badge badge-danger">&#9650; Creciente</span>';
+                } else {
+                    badge = '<span class="badge badge-stable">&#9654; Estable</span>';
+                }
+            } else if (trendValsRow.length === 1) {
+                badge = '<span class="badge badge-stable">— Sin tendencia</span>';
+            }
+
+            return `<tr>
+                <td style="font-weight:600;">${d.programa}</td>
+                <td>${d.grado}</td>
+                <td>${d.facultad}</td>
+                <td style="font-weight:700;">${tai}</td>
+                ${prevPeriod ? `<td>${taiPrevText}</td>` : ''}
+                ${prevPeriod ? `<td class="trend-cell ${varClass}">${varText}</td>` : ''}
+                ${thirdPeriod ? `<td>${taiThirdText}</td>` : ''}
+                <td style="font-size:11px; color:#666;">${spark}</td>
+                <td>${badge}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    sortTable(col) {
+        if (this._sortCol === col) {
+            this._sortDir = this._sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            this._sortCol = col;
+            this._sortDir = col === 'programa' || col === 'grado' || col === 'facultad' ? 'asc' : 'desc';
+        }
+        this.renderTable();
+    }
+}
+
+const dashboard = new Dashboard(RAW_DATA);
+</script>
+</body>
+</html>
